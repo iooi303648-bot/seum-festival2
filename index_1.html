@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>세움학교 축제</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes progress { from { width: 0% } to { width: 100% } }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeInZoom {
+      from { opacity: 0; transform: scale(0.96); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    .anim-fade-up   { animation: fadeInUp  0.8s ease both; }
+    .anim-fade-zoom { animation: fadeInZoom 0.8s ease both; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 0.8s linear infinite; }
+    * { box-sizing: border-box; }
+  </style>
+</head>
+<body class="bg-black m-0 p-0">
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+/* ── 아이콘 (lucide SVG 인라인으로 대체 — CDN 의존 제거) ── */
+const IconChevronLeft  = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>;
+const IconChevronRight = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>;
+const IconPlay         = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+const IconPause        = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>;
+const IconEyeOff       = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>;
+const IconAlert        = () => <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+
+/* ── GitHub raw URL 생성 ── */
+const githubConfig = {
+  username: "iooi303648-bot",
+  repo: "seum-festival",
+  branch: "main",
+  folderPath: ""
+};
+
+const getGithubUrl = (filename) => {
+  // 한글 파일명: encodeURIComponent 대신 수동 인코딩
+  // GitHub raw는 괄호·공백을 그대로 받아도 동작하지만
+  // 브라우저 fetch는 공백만 %20으로 처리하면 됨
+  const encoded = filename.split('').map(c => {
+    if (c === ' ') return '%20';
+    if (c === '(') return '%28';
+    if (c === ')') return '%29';
+    return c;
+  }).join('');
+  const path = githubConfig.folderPath
+    ? `${githubConfig.folderPath}${encoded}`
+    : encoded;
+  return `https://raw.githubusercontent.com/${githubConfig.username}/${githubConfig.repo}/${githubConfig.branch}/${path}`;
+};
+
+/* ── 사진 설명 생성 (고정 4개 반복 제거) ── */
+const getPhotoDesc = (globalIndex) => `세움학교 활동 ${globalIndex + 1}`;
+
+/* ── 슬라이드 데이터 생성 ── */
+const buildSlideData = (photoUrls, titleImageUrl) => {
+  const intro = [{
+    id: 'intro', layout: 'hero-image', bg: "#000000",
+    titleImage: titleImageUrl,
+    subhead: '우리가 직접 만들고 배우는\n반짝반짝 즐거운 축제 이야기'
+  }];
+
+  const outro = [{
+    id: 'outro', layout: 'hero', bg: "#000000",
+    title: '더 넓은 세상으로\n함께 나아가요!',
+    subhead: '언제나 스스로 생각하고 실천하는\n멋진 세움학교 어린이가 될게요!'
+  }];
+
+  const gallery = [];
+  for (let i = 0; i < photoUrls.length; i += 4) {
+    const slice = photoUrls.slice(i, i + 4);
+    gallery.push({
+      id: `gallery-${i}`, layout: 'grid-4', bg: "#FFFFFF",
+      title: '🔔 세움학교 교육활동',
+      subhead: '친구들과 함께한 즐거운 순간들',
+      photos: slice,
+      // ✅ 버그 수정: 전체 인덱스 기반 개별 설명
+      photoDescs: slice.map((_, j) => getPhotoDesc(i + j))
+    });
+  }
+  return [...intro, ...gallery, ...outro];
+};
+
+/* ── PhotoBox 컴포넌트 ── */
+const PhotoBox = ({ src, desc }) => {
+  const [status, setStatus] = useState('loading');
+  return (
+    <div className="bg-gray-50 rounded-3xl border border-gray-100 flex flex-col items-center justify-center h-full w-full relative overflow-hidden shadow-sm">
+      {status !== 'error' ? (
+        <img
+          src={src}
+          alt={desc}
+          className={`w-full h-full object-cover transition-opacity duration-700 ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`}
+          onLoad={() => setStatus('success')}
+          onError={() => setStatus('error')}
+        />
+      ) : (
+        <div className="flex flex-col items-center text-gray-300 p-4 text-center gap-2">
+          <IconAlert />
+          <p className="font-bold text-xs uppercase tracking-tighter opacity-40">{desc}</p>
+        </div>
+      )}
+      {status === 'loading' && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50/50">
+          <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full spinner" />
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ── 메인 앱 ── */
+const App = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [hideUI, setHideUI] = useState(false);
+  // Web Audio API 사용 — audioRef 불필요
+  const SLIDE_DURATION = 6000;
+
+  const photoUrls = useMemo(
+    () => Array.from({ length: 93 }, (_, i) => getGithubUrl(`사진 (${i + 1}).jpg`)),
+    [] // getGithubUrl은 모듈 스코프 순수함수 → 의존성 불필요
+  );
+  const schoolLogoUrl = useMemo(() => getGithubUrl('교표.png'), []);
+  const titleImageUrl = useMemo(() => getGithubUrl('KakaoTalk_20260504_111859834.png'), []);
+
+  const slideData = useMemo(
+    () => buildSlideData(photoUrls, titleImageUrl),
+    [photoUrls, titleImageUrl]
+  );
+
+  // ✅ 버그 수정: useCallback으로 안정적인 함수 참조 확보
+  const nextSlide = useCallback(() => {
+    setCurrentSlide(prev => (prev + 1) % slideData.length);
+  }, [slideData.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide(prev => (prev - 1 + slideData.length) % slideData.length);
+  }, [slideData.length]);
+
+  // ✅ 버그 수정: nextSlide를 의존성에 포함
+  useEffect(() => {
+    if (!isAutoPlaying) return;
+    const id = setInterval(nextSlide, SLIDE_DURATION);
+    return () => clearInterval(id);
+  }, [isAutoPlaying, nextSlide]);
+
+  // ✅ 버그 수정: nextSlide·prevSlide를 의존성에 포함
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+      if (e.key === 'Escape') setHideUI(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [nextSlide, prevSlide]);
+
+  // ── Web Audio API 기반 귀여운 음악 생성 ──
+  const audioCtxRef = useRef(null);
+  const musicNodesRef = useRef([]);
+
+  const stopMusic = useCallback(() => {
+    musicNodesRef.current.forEach(n => { try { n.stop(); } catch(_) {} });
+    musicNodesRef.current = [];
+  }, []);
+
+  const playMusic = useCallback(() => {
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    const ctx = audioCtxRef.current;
+
+    // 귀여운 동요풍 멜로디 — C장조, 글로켄슈필 느낌
+    // 도레미파솔라시도 = C4 D4 E4 F4 G4 A4 B4 C5
+    const noteFreq = {
+      C4:261.63, D4:293.66, E4:329.63, F4:349.23,
+      G4:392.00, A4:440.00, B4:493.88, C5:523.25,
+      G3:196.00, A3:220.00, E5:659.25, D5:587.33
+    };
+
+    // 귀여운 멜로디 패턴 (음이름, 박자길이)
+    const melody = [
+      ['E4',0.4],['G4',0.4],['A4',0.4],['G4',0.4],
+      ['E4',0.4],['C4',0.4],['D4',0.4],['E4',0.8],
+      ['E4',0.4],['G4',0.4],['A4',0.4],['G4',0.4],
+      ['E4',0.4],['C4',0.4],['D4',0.4],['C4',0.8],
+      ['G4',0.4],['A4',0.4],['C5',0.4],['A4',0.4],
+      ['G4',0.4],['E4',0.4],['F4',0.4],['G4',0.8],
+      ['E4',0.4],['G4',0.4],['A4',0.4],['G4',0.4],
+      ['E4',0.4],['D4',0.4],['C4',0.4],['C4',0.8],
+    ];
+
+    // 반주 코드 패턴 (C - Am - F - G)
+    const chords = [
+      [[261.63,329.63,392.00], 1.6],
+      [[220.00,293.66,349.23], 1.6],
+      [[174.61,261.63,329.63], 1.6],
+      [[196.00,261.63,329.63], 1.6],
+      [[261.63,329.63,392.00], 1.6],
+      [[220.00,293.66,349.23], 1.6],
+      [[174.61,261.63,329.63], 1.6],
+      [[196.00,261.63,329.63], 1.6],
+    ];
+
+    const totalDuration = melody.reduce((s,[,d])=>s+d,0);
+    const nodes = [];
+
+    const playLoop = (startTime) => {
+      let t = startTime;
+
+      // 멜로디 — 글로켄슈필 (triangle + gain envelope)
+      melody.forEach(([note, dur]) => {
+        const freq = noteFreq[note];
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(0.35, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.9);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + dur);
+        nodes.push(osc);
+        t += dur;
+      });
+
+      // 반주 — 소프트 사인파 코드
+      let ct = startTime;
+      chords.forEach(([freqs, dur]) => {
+        freqs.forEach(freq => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0, ct);
+          gain.gain.linearRampToValueAtTime(0.06, ct + 0.05);
+          gain.gain.setValueAtTime(0.06, ct + dur - 0.1);
+          gain.gain.linearRampToValueAtTime(0, ct + dur);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(ct);
+          osc.stop(ct + dur);
+          nodes.push(osc);
+        });
+        ct += dur;
+      });
+
+      // 타악기 — 소프트 킥 (노이즈)
+      for (let i = 0; i < 8; i++) {
+        const bt = startTime + i * (totalDuration / 8);
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let j = 0; j < data.length; j++) data[j] = (Math.random()*2-1) * Math.exp(-j/800);
+        const src = ctx.createBufferSource();
+        const gain = ctx.createGain();
+        src.buffer = buf;
+        gain.gain.value = 0.08;
+        src.connect(gain);
+        gain.connect(ctx.destination);
+        src.start(bt);
+        nodes.push(src);
+      }
+    };
+
+    // 루프 처리: 반복 횟수만큼 스케줄링 (30회 = 약 3분)
+    const loopCount = 30;
+    for (let i = 0; i < loopCount; i++) {
+      playLoop(ctx.currentTime + i * totalDuration);
+    }
+
+    musicNodesRef.current = nodes;
+  }, []);
+
+  const toggleAutoPlay = useCallback(() => {
+    setIsAutoPlaying(prev => {
+      if (prev) {
+        stopMusic();
+      } else {
+        playMusic();
+      }
+      return !prev;
+    });
+  }, [playMusic, stopMusic]);
+
+  const isDark = slideData[currentSlide].bg === "#000000";
+
+  const renderSlide = (slide) => {
+    const photos = slide.photos || [];
+    switch (slide.layout) {
+
+      case 'hero-image':
+        return (
+          <div key={slide.id} className="flex flex-col items-center justify-center h-full text-center px-12 pt-20 pb-20 anim-fade-zoom">
+            <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+              <img
+                src={slide.titleImage}
+                className="max-h-full w-auto object-contain rounded-3xl"
+                style={{ filter: 'drop-shadow(0 0 40px rgba(255,255,255,0.12))' }}
+                onError={e => { e.target.src = "https://via.placeholder.com/600x400?text=Intro"; }}
+                alt="인트로 이미지"
+              />
+            </div>
+            <p className="mt-8 text-2xl md:text-3xl font-light opacity-90 whitespace-pre-line leading-relaxed text-white">
+              {slide.subhead} ✨
+            </p>
+          </div>
+        );
+
+      case 'hero':
+        return (
+          <div key={slide.id} className="flex flex-col items-center justify-center h-full text-center px-12 pt-20 pb-20 anim-fade-zoom">
+            <div className="mb-8">
+              <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-xl mx-auto overflow-hidden">
+                <img src={schoolLogoUrl} className="w-4/5 h-4/5 object-contain"
+                  onError={e => { e.target.src = "https://via.placeholder.com/50?text=S"; }}
+                  alt="교표" />
+              </div>
+            </div>
+            <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-8 whitespace-pre-line tracking-tight text-white">
+              {slide.title}
+            </h1>
+            <p className="text-2xl md:text-3xl font-light opacity-90 whitespace-pre-line leading-relaxed text-white">
+              {slide.subhead} ✨
+            </p>
+          </div>
+        );
+
+      case 'grid-4':
+        return (
+          <div key={slide.id} className="flex flex-col h-full px-10 pt-16 pb-12 anim-fade-up">
+            <div className="mb-4 w-full flex flex-col items-center border-b border-gray-100 pb-2">
+              <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-gray-900 uppercase">
+                {slide.title}
+              </h2>
+              <p className="text-xs font-bold text-gray-400 opacity-80 italic">
+                {slide.subhead} ✨
+              </p>
+            </div>
+            <div className="grid grid-cols-2 grid-rows-2 gap-5 flex-1 min-h-0">
+              {photos.map((url, i) => (
+                <PhotoBox key={`${slide.id}-${i}`} src={url} desc={slide.photoDescs[i]} />
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className={`flex flex-col items-center justify-center min-h-screen bg-black${hideUI ? ' cursor-none' : ''}`}>
+
+
+      {/* 슬라이드 캔버스 */}
+      <div
+        className="relative overflow-hidden rounded-[48px] bg-white flex flex-col"
+        style={{
+          width: '97vw',
+          maxWidth: '1900px',
+          aspectRatio: '16 / 9',
+          maxHeight: '94vh',
+          boxShadow: '0 40px 100px rgba(0,0,0,0.9)'
+        }}
+      >
+        {/* 프로그레스 바 */}
+        {isAutoPlaying && !hideUI && (
+          <div className="absolute top-0 left-0 w-full h-1 bg-black/5 z-[110]">
+            <div
+              className="h-full bg-blue-600"
+              style={{
+                animation: `progress ${SLIDE_DURATION}ms linear`,
+                boxShadow: '0 0 15px rgba(37,99,235,0.6)'
+              }}
+              key={currentSlide}
+            />
+          </div>
+        )}
+
+        {/* 헤더 */}
+        {!hideUI && (
+          <header className="absolute top-6 left-12 right-12 z-[100] flex items-center justify-between pointer-events-none">
+            <div className="flex items-center gap-5">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 overflow-hidden shadow-lg">
+                <img src={schoolLogoUrl} alt="교표" className="w-4/5 h-4/5 object-contain"
+                  onError={e => { e.target.src = "https://via.placeholder.com/50?text=S"; }} />
+              </div>
+              <div className="flex flex-col">
+                <span className={`font-black text-lg md:text-xl tracking-tighter transition-colors duration-700 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  동일중앙초등학교
+                </span>
+                <span className={`text-xs tracking-widest font-bold uppercase transition-colors duration-700 ${isDark ? 'text-white/40' : 'text-gray-400'}`}>
+                  Seum School Festival
+                </span>
+              </div>
+            </div>
+            <div className={`px-4 py-1.5 rounded-2xl border font-mono text-sm font-black transition-all duration-700 ${isDark ? 'text-white/30 border-white/10 bg-white/5' : 'text-gray-300 border-gray-100 bg-gray-50/50'}`}>
+              {String(currentSlide + 1).padStart(2, '0')} / {String(slideData.length).padStart(2, '0')}
+            </div>
+          </header>
+        )}
+
+        {/* 슬라이드 본문 */}
+        <main
+          className="h-full relative overflow-hidden transition-colors duration-700"
+          style={{ backgroundColor: slideData[currentSlide].bg }}
+        >
+          {renderSlide(slideData[currentSlide])}
+        </main>
+      </div>
+
+      {/* 하단 컨트롤 바 */}
+      {!hideUI && (
+        <div className="fixed bottom-4 flex items-center gap-6 bg-white/85 backdrop-blur-xl px-7 py-2 rounded-full border border-white/40 z-[200] anim-fade-up"
+          style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+          <div className="flex items-center gap-2">
+            <button onClick={prevSlide}
+              className="p-1.5 hover:bg-black/5 rounded-full transition-all active:scale-75 text-gray-600">
+              <IconChevronLeft />
+            </button>
+            <button
+              onClick={toggleAutoPlay}
+              className={`w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90 ${
+                isAutoPlaying
+                  ? 'bg-blue-600 text-white shadow-lg'
+                  : 'bg-gray-900 text-white hover:bg-black'
+              }`}
+            >
+              {isAutoPlaying ? <IconPause /> : <IconPlay />}
+            </button>
+            <button onClick={nextSlide}
+              className="p-1.5 hover:bg-black/5 rounded-full transition-all active:scale-75 text-gray-600">
+              <IconChevronRight />
+            </button>
+          </div>
+
+          <div className="w-px h-5 bg-gray-300/50" />
+
+          <button
+            className="bg-black/90 text-white px-5 py-2 rounded-full font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-black active:scale-95 transition-all"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
+            onClick={() => {
+              if (!isAutoPlaying) toggleAutoPlay();
+              setHideUI(true);
+            }}
+          >
+            <IconEyeOff /> 녹화 최적화
+          </button>
+        </div>
+      )}
+
+      {hideUI && (
+        <div className="fixed bottom-6 text-white/20 text-xs font-black tracking-widest uppercase"
+          style={{ animation: 'fadeInUp 1s ease both' }}>
+          ESC TO MENU
+        </div>
+      )}
+    </div>
+  );
+};
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
