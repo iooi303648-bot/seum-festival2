@@ -127,7 +127,7 @@ const App = () => {
   const SLIDE_DURATION = 6000;
 
   const photoUrls = useMemo(() => Array.from({ length: 106 }, (_, i) => getGithubUrl("사진 (" + (i + 1) + ").jpg")), []);
-  const schoolLogoUrl = useMemo(() => getGithubUrl("교표.png"), []);
+  const schoolLogoUrl = useMemo(() => getGithubUrl("교포.png"), []);
   const titleImageUrl = useMemo(() => getGithubUrl("KakaoTalk_20260504_111859834.png"), []);
   const slideData = useMemo(() => buildSlideData(photoUrls, titleImageUrl), [photoUrls, titleImageUrl]);
 
