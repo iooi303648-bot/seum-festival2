@@ -230,21 +230,22 @@ const App = () => {
     switch (slide.layout) {
       case "hero-image":
         return (
-          <div key={slide.id} className="flex flex-col items-center justify-center h-full text-center px-12 pt-20 pb-20 anim-fade-zoom">
-            <div className="flex-1 flex flex-col items-center justify-center min-h-0 w-full">
-              <img src={slide.titleImage} className="max-h-full max-w-full object-contain rounded-3xl"
-                style={{ filter: "drop-shadow(0 20px 60px rgba(255,255,255,0.15))" }}
+          <div key={slide.id} className="relative flex flex-col items-center justify-center h-full text-center anim-fade-zoom overflow-hidden">
+            <div className="flex-1 relative w-full min-h-0">
+              <img src={slide.titleImage} className="w-full h-full object-cover"
+                style={{ position:"absolute", inset:0 }}
                 onError={e => { e.target.src = "https://placehold.co/1200x800/111/fff?text=Seum+Festival"; }}
                 alt="인트로 이미지" />
             </div>
-            <p className="mt-8 text-2xl md:text-3xl font-light opacity-90 whitespace-pre-line leading-relaxed text-white">
+            <p className="absolute bottom-10 left-0 right-0 text-center text-2xl md:text-3xl font-light whitespace-pre-line leading-relaxed text-white"
+              style={{ textShadow:"0 2px 20px rgba(0,0,0,0.8)", zIndex:10 }}>
               {slide.subhead} ✨
             </p>
           </div>
         );
       case "hero":
         return (
-          <div key={slide.id} className="flex flex-col items-center justify-center h-full text-center px-12 pt-20 pb-20 anim-fade-zoom">
+          <div key={slide.id} className="relative flex flex-col items-center justify-center h-full text-center anim-fade-zoom overflow-hidden">
             <div className="mb-8">
               <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-2xl mx-auto overflow-hidden">
                 <img src={schoolLogoUrl} className="w-4/5 h-4/5 object-contain"
