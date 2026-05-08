@@ -44,17 +44,21 @@ const githubConfig = {
   username: "iooi303648-bot",
   repo: "seum-festival",
   branch: "main",
-  folderPath: ""
+  folderPath: "" // 폴더 안에 있다면 'assets/' 형식으로 입력
 };
 
 /**
- * ✅ 수정 포인트: 한글 파일명을 브라우저가 이해할 수 있도록 encodeURIComponent 사용
+ * GitHub Raw URL 생성기
  */
 const getGithubUrl = (filename) => {
   if (!filename) return "";
-  // 한글(UTF-8)을 URL 인코딩으로 변환하여 GitHub Raw URL 생성
   const encodedFilename = encodeURIComponent(filename);
-  const path = githubConfig.folderPath ? `${githubConfig.folderPath}${encodedFilename}` : encodedFilename;
+  let baseFolder = githubConfig.folderPath;
+  // 폴더 경로가 있고 슬래시로 끝나지 않는 경우 슬래시 추가
+  if (baseFolder && !baseFolder.endsWith('/')) {
+    baseFolder += '/';
+  }
+  const path = baseFolder ? `${baseFolder}${encodedFilename}` : encodedFilename;
   return `https://raw.githubusercontent.com/${githubConfig.username}/${githubConfig.repo}/${githubConfig.branch}/${path}`;
 };
 
@@ -98,7 +102,7 @@ const PhotoBox = ({ src, desc }) => {
           className={`w-full h-full object-cover transition-opacity duration-700 ${status === 'loading' ? 'opacity-0' : 'opacity-100'}`}
           onLoad={() => setStatus('success')}
           onError={() => {
-            console.error("Image Load Failed:", src);
+            console.warn("이미지 로드 실패:", src);
             setStatus('error');
           }}
         />
@@ -123,10 +127,10 @@ const App = () => {
   const [hideUI, setHideUI] = useState(false);
   const SLIDE_DURATION = 6000;
 
-  // ✅ 사진 개수를 93개에서 106개로 업데이트
+  // ✅ 사진 (1) ~ 사진 (106)
   const photoUrls = useMemo(() => Array.from({ length: 106 }, (_, i) => getGithubUrl(`사진 (${i + 1}).jpg`)), []);
   
-  // ✅ 한글 파일명 인코딩 확인
+  // ✅ 교표 및 인트로 이미지
   const schoolLogoUrl = useMemo(() => getGithubUrl('교표.png'), []);
   const titleImageUrl = useMemo(() => getGithubUrl('KakaoTalk_20260504_111859834.png'), []);
 
@@ -172,9 +176,9 @@ const App = () => {
     if (ctx.state === 'suspended') ctx.resume();
 
     const noteFreq = {
-      C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88, C5:523.25, G3:196.00, A3:220.00, E5:659.25, D5:587.33
+      C4:261.63, D4:293.66, E4:329.63, F4:349.23, G4:392.00, A4:440.00, B4:493.88, C5:523.25
     };
-    const melody = [['E4',0.4],['G4',0.4],['A4',0.4],['G4',0.4],['E4',0.4],['C4',0.4],['D4',0.4],['E4',0.8],['E4',0.4],['G4',0.4],['A4',0.4],['G4',0.4],['E4',0.4],['C4',0.4],['D4',0.4],['C4',0.8]];
+    const melody = [['E4',0.4],['G4',0.4],['A4',0.4],['G4',0.4],['E4',0.4],['C4',0.4],['D4',0.4],['E4',0.8]];
     const totalDuration = melody.reduce((s,[,d])=>s+d,0);
     const nodes = [];
 
@@ -186,7 +190,7 @@ const App = () => {
         osc.type = 'triangle';
         osc.frequency.value = noteFreq[note];
         gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.15, t + 0.02);
+        gain.gain.linearRampToValueAtTime(0.1, t + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.9);
         osc.connect(gain); gain.connect(ctx.destination);
         osc.start(t); osc.stop(t + dur);
@@ -195,7 +199,7 @@ const App = () => {
       });
     };
 
-    for (let i = 0; i < 20; i++) {
+    for (let i = 0; i < 30; i++) {
       playLoop(ctx.currentTime + i * totalDuration);
     }
     musicNodesRef.current = nodes;
@@ -221,8 +225,8 @@ const App = () => {
               <img
                 src={slide.titleImage}
                 className="max-h-full max-w-full object-contain rounded-3xl"
-                style={{ filter: 'drop-shadow(0 20px 50px rgba(255,255,255,0.1))' }}
-                onError={e => { e.target.src = "https://placehold.co/1200x800/222/fff?text=Seum+School+Festival"; }}
+                style={{ filter: 'drop-shadow(0 20px 60px rgba(255,255,255,0.15))' }}
+                onError={e => { e.target.src = "https://placehold.co/1200x800/111/fff?text=Seum+Festival"; }}
                 alt="인트로 이미지"
               />
             </div>
@@ -238,7 +242,7 @@ const App = () => {
             <div className="mb-8">
               <div className="w-24 h-24 rounded-full bg-white flex items-center justify-center border border-gray-100 shadow-2xl mx-auto overflow-hidden">
                 <img src={schoolLogoUrl} className="w-4/5 h-4/5 object-contain"
-                  onError={e => { e.target.src = "https://placehold.co/100x100/eee/999?text=Logo"; }}
+                  onError={e => { e.target.src = "https://placehold.co/100x100/eee/bbb?text=School"; }}
                   alt="교표" />
               </div>
             </div>
@@ -255,7 +259,7 @@ const App = () => {
         return (
           <div key={slide.id} className="flex flex-col h-full px-10 pt-20 pb-12 anim-fade-up">
             <div className="mb-6 w-full flex flex-col items-center border-b border-gray-100 pb-4">
-              <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-gray-900 uppercase">
+              <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-gray-900 uppercase flex items-center gap-3">
                 {slide.title}
               </h2>
               <p className="text-sm font-bold text-gray-400 opacity-80 italic">
@@ -285,7 +289,7 @@ const App = () => {
           maxWidth: '1800px',
           aspectRatio: '16 / 9',
           maxHeight: '92vh',
-          boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)'
+          boxShadow: '0 60px 120px -20px rgba(0,0,0,0.9)'
         }}
       >
         {isAutoPlaying && !hideUI && (
@@ -294,7 +298,7 @@ const App = () => {
               className="h-full bg-blue-500 transition-all"
               style={{
                 animation: `progress ${SLIDE_DURATION}ms linear`,
-                boxShadow: '0 0 10px rgba(59,130,246,0.5)'
+                boxShadow: '0 0 12px rgba(59,130,246,0.6)'
               }}
               key={currentSlide}
             />
@@ -303,10 +307,10 @@ const App = () => {
 
         {!hideUI && (
           <header className="absolute top-8 left-12 right-12 z-[100] flex items-center justify-between pointer-events-none">
-            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-md p-2 pr-6 rounded-full border border-white/20">
-              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 overflow-hidden shadow-lg pointer-events-auto">
+            <div className="flex items-center gap-4 bg-white/10 backdrop-blur-xl p-2 pr-6 rounded-full border border-white/20 shadow-lg pointer-events-auto">
+              <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center border border-gray-100 overflow-hidden shadow-sm">
                 <img src={schoolLogoUrl} alt="교표" className="w-4/5 h-4/5 object-contain"
-                  onError={e => { e.target.src = "https://placehold.co/100x100/eee/999?text=S"; }} />
+                  onError={e => { e.target.src = "https://placehold.co/100x100/fff/333?text=S"; }} />
               </div>
               <div className="flex flex-col">
                 <span className={`font-black text-lg tracking-tighter transition-colors duration-700 ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -317,7 +321,7 @@ const App = () => {
                 </span>
               </div>
             </div>
-            <div className={`px-5 py-2 rounded-2xl border font-mono text-sm font-black transition-all duration-700 ${isDark ? 'text-white/40 border-white/10 bg-white/5' : 'text-gray-400 border-gray-100 bg-gray-50/50'}`}>
+            <div className={`px-5 py-2 rounded-2xl border font-mono text-sm font-black transition-all duration-700 ${isDark ? 'text-white/40 border-white/10 bg-white/5 shadow-inner' : 'text-gray-400 border-gray-100 bg-gray-50/50'}`}>
               {String(currentSlide + 1).padStart(2, '0')} / {String(slideData.length).padStart(2, '0')}
             </div>
           </header>
@@ -332,15 +336,15 @@ const App = () => {
       </div>
 
       {!hideUI && (
-        <div className="fixed bottom-6 flex items-center gap-6 bg-white/90 backdrop-blur-2xl px-8 py-3 rounded-full border border-white/50 z-[200] anim-fade-up shadow-2xl">
+        <div className="fixed bottom-6 flex items-center gap-6 bg-white/95 backdrop-blur-3xl px-8 py-3 rounded-full border border-white/60 z-[200] anim-fade-up shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-3">
             <button onClick={prevSlide} className="p-2 hover:bg-black/5 rounded-full transition-all active:scale-75 text-gray-600">
               <IconChevronLeft />
             </button>
             <button
               onClick={toggleAutoPlay}
-              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90 ${
-                isAutoPlaying ? 'bg-blue-600 text-white shadow-blue-200 shadow-xl' : 'bg-gray-900 text-white hover:bg-black'
+              className={`w-10 h-10 flex items-center justify-center rounded-full transition-all active:scale-90 shadow-xl ${
+                isAutoPlaying ? 'bg-blue-600 text-white shadow-blue-200' : 'bg-gray-900 text-white hover:bg-black'
               }`}
             >
               {isAutoPlaying ? <IconPause /> : <IconPlay />}
@@ -349,7 +353,7 @@ const App = () => {
               <IconChevronRight />
             </button>
           </div>
-          <div className="w-px h-6 bg-gray-300/50" />
+          <div className="w-px h-6 bg-gray-300/60" />
           <button
             className="bg-black text-white px-6 py-2.5 rounded-full font-bold text-xs tracking-widest flex items-center gap-2 hover:bg-zinc-800 active:scale-95 transition-all shadow-lg"
             onClick={() => {
@@ -363,7 +367,7 @@ const App = () => {
       )}
 
       {hideUI && (
-        <div className="fixed bottom-8 text-white/30 text-[10px] font-black tracking-[0.3em] uppercase anim-fade-up">
+        <div className="fixed bottom-8 text-white/30 text-[10px] font-black tracking-[0.4em] uppercase anim-fade-up">
           PRESS ESC TO RESTORE MENU
         </div>
       )}
