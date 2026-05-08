@@ -123,7 +123,9 @@ const App = () => {
   const [hideUI, setHideUI] = useState(false);
   const SLIDE_DURATION = 6000;
 
-  const photoUrls = useMemo(() => Array.from({ length: 93 }, (_, i) => getGithubUrl(`사진 (${i + 1}).jpg`)), []);
+  // ✅ 사진 개수를 93개에서 106개로 업데이트
+  const photoUrls = useMemo(() => Array.from({ length: 106 }, (_, i) => getGithubUrl(`사진 (${i + 1}).jpg`)), []);
+  
   // ✅ 한글 파일명 인코딩 확인
   const schoolLogoUrl = useMemo(() => getGithubUrl('교표.png'), []);
   const titleImageUrl = useMemo(() => getGithubUrl('KakaoTalk_20260504_111859834.png'), []);
