@@ -14,7 +14,7 @@ body{background:#000;font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans
 #load-sub{color:rgba(255,255,255,.45);font-size:12px}
 #bar-wrap{width:260px;height:5px;background:rgba(255,255,255,.12);border-radius:3px;overflow:hidden}
 #bar{height:100%;background:#3b82f6;border-radius:3px;width:0;transition:width .3s}
-#canvas{position:relative;width:96vw;max-width:1800px;aspect-ratio:16/9;max-height:92vh;border-radius:40px;box-shadow:0 60px 120px -20px rgba(0,0,0,.9);overflow:hidden;background:#111}
+#canvas{position:relative;width:96vw;max-width:1800px;aspect-ratio:16/9;max-height:92vh;border-radius:40px;box-shadow:0 60px 120px -20px rgba(0,0,0,.9);overflow:hidden;background:#000}
 .slide{position:absolute;inset:0;opacity:0;pointer-events:none;transition:opacity .5s;z-index:1}
 .slide.active{opacity:1;pointer-events:auto;z-index:2}
 .s-hdr{position:absolute;top:24px;left:36px;right:36px;display:flex;align-items:center;justify-content:space-between;z-index:10;pointer-events:none}
@@ -34,11 +34,21 @@ body{background:#000;font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans
 .g-title{display:flex;align-items:center;gap:10px;font-size:clamp(16px,2.4vw,30px);font-weight:900;letter-spacing:0;color:#1a1a1a;line-height:1.15;white-space:nowrap}
 .g-slogo{height:2.4rem;width:auto;max-width:210px;object-fit:contain}
 .g-sub{font-size:clamp(9px,1vw,12px);font-weight:700;color:#999;font-style:italic;line-height:1.4;text-align:center}
-.g-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;padding:14px 22px 18px;flex:1;min-height:0}
-.g-cell{border-radius:18px;overflow:hidden;background:#f8f8f8;border:1px solid #eee;display:flex;align-items:center;justify-content:center}
-.g-cell img{width:100%;height:100%;object-fit:contain}
-.g-cell.missing{color:#999;font-size:13px;font-weight:700;text-align:center;padding:16px}
+.g-grid{display:grid;gap:12px;padding:14px 22px 18px;flex:1;min-height:0;background:#fff}
+.g-grid.landscape{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.g-grid.landscape.count-1{grid-template-columns:1fr;grid-template-rows:1fr}
+.g-grid.landscape.count-2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
+.g-grid.landscape.count-3{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.g-grid.landscape.count-3 .g-cell:first-child{grid-row:span 2}
+.g-grid.portrait{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr}
+.g-grid.portrait.count-1{grid-template-columns:minmax(0,.52fr);justify-content:center}
+.g-grid.portrait.count-2{grid-template-columns:repeat(2,minmax(0,.5fr));justify-content:center}
+.g-cell{border-radius:14px;overflow:hidden;background:#111;border:1px solid #eee;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
+.g-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.g-cell.missing{color:#bbb;font-size:13px;font-weight:700;text-align:center;padding:16px;background:#f0f0f0}
 .dk-slide{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 48px}
+.intro-slide{background:#000}
+.intro-img{max-height:58%;width:auto;max-width:80%;object-fit:contain;background:#000;border-radius:20px}
 #ctrl{position:fixed;bottom:18px;display:flex;align-items:center;gap:18px;background:rgba(255,255,255,.95);backdrop-filter:blur(20px);padding:9px 26px;border-radius:999px;border:1px solid rgba(255,255,255,.5);box-shadow:0 16px 40px rgba(0,0,0,.25);z-index:200}
 #ctrl.hidden{display:none}
 .c-btn{width:34px;height:34px;border-radius:50%;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#555}
@@ -48,7 +58,7 @@ body{background:#000;font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans
 .c-div{width:1px;height:18px;background:rgba(0,0,0,.1)}
 #rbtn{background:#111;color:#fff;border:none;cursor:pointer;padding:7px 16px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.1em;display:flex;align-items:center;gap:5px;font-family:inherit;white-space:nowrap}
 #esc{position:fixed;bottom:22px;color:rgba(255,255,255,.25);font-size:10px;font-weight:700;letter-spacing:.35em;text-transform:uppercase;display:none}
-@media (max-width:700px){#canvas{width:100vw;height:100vh;max-height:none;border-radius:0;aspect-ratio:auto}.s-hdr{top:14px;left:14px;right:14px}.g-grid{gap:8px;padding:10px}.g-top{padding:58px 12px 8px}.g-title{font-size:18px}.g-slogo{max-width:140px}.dk-slide{padding:76px 24px}}
+@media (max-width:700px){#canvas{width:100vw;height:100vh;max-height:none;border-radius:0;aspect-ratio:auto}.s-hdr{top:14px;left:14px;right:14px}.g-grid{gap:8px;padding:10px}.g-top{padding:58px 12px 8px}.g-title{font-size:18px}.g-slogo{max-width:140px}.dk-slide{padding:76px 24px}.g-grid.portrait,.g-grid.portrait.count-1,.g-grid.portrait.count-2{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.g-grid.portrait.count-1{grid-template-columns:1fr;grid-template-rows:1fr}.g-grid.portrait.count-3{grid-template-columns:1fr;grid-template-rows:repeat(3,1fr)}}
 </style>
 </head>
 <body>
@@ -76,11 +86,22 @@ const asset=name=>RAW+name.split('/').map(encodeURIComponent).join('/');
 const SLOGO=asset('교포.png');
 const RLOGO=asset('세움학교 로고.png');
 const titleImg=asset('KakaoTalk_20260504_111859834.png');
-const photos=Array.from({length:106},(_,i)=>{const n=i+1,ext=(n>=46&&n<=54)?'.JPG':'.jpg';return asset(`사진 (${n})${ext}`);});
-const TOTAL=Math.ceil(photos.length/4)+2;
-let cur=0,playing=false,timer=null,actx=null,ipm=false,mt=null;
+const photoUrls=Array.from({length:106},(_,i)=>{const n=i+1,ext=(n>=46&&n<=54)?'.JPG':'.jpg';return {url:asset(`사진 (${n})${ext}`),num:n};});
+let cur=0,TOTAL=0,playing=false,timer=null,actx=null,ipm=false,mt=null,sls=[];
 const canvas=document.getElementById('canvas');
+const bar=document.getElementById('bar'),sub=document.getElementById('load-sub'),ldiv=document.getElementById('loading');
+let loaded=0,loadTotal=photoUrls.length+3;
 
+function tick(){loaded++;bar.style.width=(loaded/loadTotal*100)+'%';sub.textContent=loaded+' / '+loadTotal;}
+function probe(url,num){
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{tick();resolve({url,num,width:img.naturalWidth,height:img.naturalHeight,ok:true});};
+    img.onerror=()=>{tick();resolve({url,num,width:1,height:1,ok:false});};
+    img.src=url;
+  });
+}
+function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out;}
 function hdr(light,idx){
   const d=document.createElement('div');d.className='s-hdr';
   const t=light?'lt':'dk';
@@ -95,42 +116,39 @@ function hdr(light,idx){
   d.append(brand,cnt);
   return d;
 }
-
 function createIntro(){
-  const d=document.createElement('div');d.className='slide active dk-slide';d.style.background='#0d0d1f';
-  const img=document.createElement('img');
-  img.src=titleImg;img.alt='인트로';
-  img.style.cssText='max-height:58%;width:auto;max-width:80%;object-fit:contain;border-radius:20px';
+  const d=document.createElement('div');d.className='slide active dk-slide intro-slide';
+  const img=document.createElement('img');img.src=titleImg;img.alt='인트로';img.className='intro-img';
   const p=document.createElement('p');
   p.style.cssText='margin-top:24px;font-size:clamp(14px,2vw,26px);font-weight:300;color:rgba(255,255,255,.9);text-align:center;line-height:1.7;white-space:pre-line';
   p.textContent='우리가 직접 만들고 배우는\n반짝반짝 즐거운 축제 이야기 ✨';
   d.append(img,p,hdr(true,0));canvas.appendChild(d);
 }
-
-function createGallery(){
-  for(let i=0;i<photos.length;i+=4){
-    const idx=Math.floor(i/4)+1;
-    const d=document.createElement('div');d.className='slide';
-    const w=document.createElement('div');w.className='g-wrap';
-    const top=document.createElement('div');top.className='g-top';
-    const title=document.createElement('div');title.className='g-title';
-    const bell=document.createElement('span');bell.textContent='🔔';
-    const rlogo=document.createElement('img');rlogo.src=RLOGO;rlogo.className='g-slogo';rlogo.alt='세움학교 로고';
-    const act=document.createElement('span');act.textContent='교육활동';
-    title.append(bell,rlogo,act);
-    const sub=document.createElement('div');sub.className='g-sub';sub.textContent='친구들과 함께한 즐거운 순간들 ✨';
-    top.append(title,sub);
-    const grid=document.createElement('div');grid.className='g-grid';
-    photos.slice(i,i+4).forEach((url,j)=>{
-      const cell=document.createElement('div');cell.className='g-cell';
-      const img=document.createElement('img');img.src=url;img.alt='세움학교 활동 '+(i+j+1);
-      img.onerror=()=>{cell.classList.add('missing');cell.textContent='이미지를 불러오지 못했습니다';};
-      cell.appendChild(img);grid.appendChild(cell);
+function createGallery(groups){
+  let slideIndex=1;
+  groups.forEach(group=>{
+    group.chunks.forEach(items=>{
+      const d=document.createElement('div');d.className='slide';
+      const w=document.createElement('div');w.className='g-wrap';
+      const top=document.createElement('div');top.className='g-top';
+      const title=document.createElement('div');title.className='g-title';
+      const bell=document.createElement('span');bell.textContent=group.kind==='portrait'?'▥':'▤';
+      const rlogo=document.createElement('img');rlogo.src=RLOGO;rlogo.className='g-slogo';rlogo.alt='세움학교 로고';
+      const act=document.createElement('span');act.textContent=group.label;
+      title.append(bell,rlogo,act);
+      const sub=document.createElement('div');sub.className='g-sub';sub.textContent='친구들과 함께한 즐거운 순간들 ✨';
+      top.append(title,sub);
+      const grid=document.createElement('div');grid.className=`g-grid ${group.kind} count-${items.length}`;
+      items.forEach(item=>{
+        const cell=document.createElement('div');cell.className='g-cell';
+        const img=document.createElement('img');img.src=item.url;img.alt='세움학교 활동 '+item.num;
+        img.onerror=()=>{cell.classList.add('missing');cell.textContent='이미지를 불러오지 못했습니다';};
+        cell.appendChild(img);grid.appendChild(cell);
+      });
+      w.append(top,grid);d.append(w,hdr(false,slideIndex));canvas.appendChild(d);slideIndex++;
     });
-    w.append(top,grid);d.append(w,hdr(false,idx));canvas.appendChild(d);
-  }
+  });
 }
-
 function createOutro(){
   const idx=TOTAL-1;
   const d=document.createElement('div');d.className='slide dk-slide';d.style.background='#000';
@@ -146,12 +164,22 @@ function createOutro(){
   h2.textContent='언제나 스스로 생각하고 실천하는\n멋진 세움학교 어린이가 될게요! ✨';
   d.append(logoWrap,h1,h2,hdr(true,idx));canvas.appendChild(d);
 }
-
-createIntro();
-createGallery();
-createOutro();
-const sls=canvas.querySelectorAll('.slide');
-function go(n){if(n<0||n>=TOTAL)return;sls[cur].classList.remove('active');cur=n;sls[cur].classList.add('active');}
+async function build(){
+  await Promise.all([probe(SLOGO,0),probe(RLOGO,0),probe(titleImg,0)]);
+  const measured=await Promise.all(photoUrls.map(p=>probe(p.url,p.num)));
+  const landscape=measured.filter(p=>p.ok&&p.width>=p.height).sort((a,b)=>a.num-b.num);
+  const portrait=measured.filter(p=>p.ok&&p.width<p.height).sort((a,b)=>a.num-b.num);
+  const missing=measured.filter(p=>!p.ok).sort((a,b)=>a.num-b.num);
+  const groups=[
+    {kind:'landscape',label:'가로 사진',chunks:chunk(landscape.concat(missing),4)},
+    {kind:'portrait',label:'세로 사진',chunks:chunk(portrait,3)}
+  ].filter(g=>g.chunks.length);
+  TOTAL=2+groups.reduce((sum,g)=>sum+g.chunks.length,0);
+  createIntro();createGallery(groups);createOutro();
+  sls=[...canvas.querySelectorAll('.slide')];
+  ldiv.classList.add('done');
+}
+function go(n){if(n<0||n>=TOTAL||!sls.length)return;sls[cur].classList.remove('active');cur=n;sls[cur].classList.add('active');}
 function togglePlay(){
   playing=!playing;
   document.getElementById('iplay').style.display=playing?'none':'block';
@@ -185,9 +213,7 @@ function playMusic(){
   loop(actx.currentTime);
 }
 function stopMusic(){ipm=false;if(mt){clearTimeout(mt);mt=null;}if(actx){actx.close().catch(()=>{});actx=null;}}
-const all=[SLOGO,RLOGO,titleImg,...photos];let loaded=0;
-const bar=document.getElementById('bar'),sub=document.getElementById('load-sub'),ldiv=document.getElementById('loading');
-all.forEach(url=>{const i=new Image();i.onload=i.onerror=()=>{loaded++;bar.style.width=(loaded/all.length*100)+'%';sub.textContent=loaded+' / '+all.length;if(loaded>=all.length)ldiv.classList.add('done');};i.src=url;});
+build();
 </script>
 </body>
 </html>
