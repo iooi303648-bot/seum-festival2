@@ -101,7 +101,8 @@ const PhotoBox = ({ src, desc }) => {
       {!isError ? (
         <img
           src={src} alt={desc}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
+          style={{backgroundColor:"#f8f8f8"}}
           onError={() => { console.warn("이미지 로드 실패:", src); setIsError(true); }}
         />
       ) : (
