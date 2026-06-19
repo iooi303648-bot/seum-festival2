@@ -182,8 +182,8 @@ async function build(){
   const portrait=measured.filter(p=>p.ok&&p.width<p.height).sort((a,b)=>a.num-b.num);
   const missing=measured.filter(p=>!p.ok).sort((a,b)=>a.num-b.num);
   const groups=[
-    {kind:'landscape',label:'가로 사진',chunks:chunk(landscape.concat(missing),5)},
-    {kind:'portrait',label:'세로 사진',chunks:chunk(portrait,8)}
+    {kind:'landscape',label:'축제 이야기',chunks:chunk(landscape.concat(missing),5)},
+    {kind:'portrait',label:'축제 이야기',chunks:chunk(portrait,8)}
   ].filter(g=>g.chunks.length);
   TOTAL=2+groups.reduce((sum,g)=>sum+g.chunks.length,0);
   createIntro();createGallery(groups);createOutro();
