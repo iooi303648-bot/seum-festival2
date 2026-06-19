@@ -34,18 +34,11 @@ body{background:#000;font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans
 .g-title{display:flex;align-items:center;gap:10px;font-size:clamp(16px,2.4vw,30px);font-weight:900;letter-spacing:0;color:#1a1a1a;line-height:1.15;white-space:nowrap}
 .g-slogo{height:2.4rem;width:auto;max-width:210px;object-fit:contain}
 .g-sub{font-size:clamp(9px,1vw,12px);font-weight:700;color:#999;font-style:italic;line-height:1.4;text-align:center}
-.g-grid{display:grid;gap:12px;padding:14px 22px 18px;flex:1;min-height:0;background:#fff}
-.g-grid.landscape{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
-.g-grid.landscape.count-1{grid-template-columns:1fr;grid-template-rows:1fr}
-.g-grid.landscape.count-2{grid-template-columns:1fr 1fr;grid-template-rows:1fr}
-.g-grid.landscape.count-3{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
-.g-grid.landscape.count-3 .g-cell:first-child{grid-row:span 2}
-.g-grid.portrait{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:1fr}
-.g-grid.portrait.count-1{grid-template-columns:minmax(0,.52fr);justify-content:center}
-.g-grid.portrait.count-2{grid-template-columns:repeat(2,minmax(0,.5fr));justify-content:center}
-.g-cell{border-radius:14px;overflow:hidden;background:#111;border:1px solid #eee;display:flex;align-items:center;justify-content:center;min-width:0;min-height:0}
-.g-cell img{width:100%;height:100%;object-fit:cover;display:block}
-.g-cell.missing{color:#bbb;font-size:13px;font-weight:700;text-align:center;padding:16px;background:#f0f0f0}
+.photo-board{display:flex;flex-direction:column;gap:12px;padding:14px 22px 18px;flex:1;min-height:0;background:#fff;overflow:hidden}
+.photo-row{display:flex;align-items:center;justify-content:center;gap:12px;min-height:0;flex:1}
+.photo-row.single{flex:1.18}
+.photo-row img{height:100%;width:auto;max-width:100%;object-fit:contain;display:block;border-radius:14px;background:#111;box-shadow:0 0 0 1px #eee}
+.photo-row.missing{color:#777;font-size:13px;font-weight:700;text-align:center}
 .dk-slide{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 48px}
 .intro-slide{background:#000}
 .intro-img{max-height:58%;width:auto;max-width:80%;object-fit:contain;background:#000;border-radius:20px}
@@ -58,7 +51,7 @@ body{background:#000;font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans
 .c-div{width:1px;height:18px;background:rgba(0,0,0,.1)}
 #rbtn{background:#111;color:#fff;border:none;cursor:pointer;padding:7px 16px;border-radius:999px;font-size:10px;font-weight:700;letter-spacing:.1em;display:flex;align-items:center;gap:5px;font-family:inherit;white-space:nowrap}
 #esc{position:fixed;bottom:22px;color:rgba(255,255,255,.25);font-size:10px;font-weight:700;letter-spacing:.35em;text-transform:uppercase;display:none}
-@media (max-width:700px){#canvas{width:100vw;height:100vh;max-height:none;border-radius:0;aspect-ratio:auto}.s-hdr{top:14px;left:14px;right:14px}.g-grid{gap:8px;padding:10px}.g-top{padding:58px 12px 8px}.g-title{font-size:18px}.g-slogo{max-width:140px}.dk-slide{padding:76px 24px}.g-grid.portrait,.g-grid.portrait.count-1,.g-grid.portrait.count-2{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.g-grid.portrait.count-1{grid-template-columns:1fr;grid-template-rows:1fr}.g-grid.portrait.count-3{grid-template-columns:1fr;grid-template-rows:repeat(3,1fr)}}
+@media (max-width:700px){#canvas{width:100vw;height:100vh;max-height:none;border-radius:0;aspect-ratio:auto}.s-hdr{top:14px;left:14px;right:14px}.photo-board{gap:8px;padding:10px}.photo-row{gap:8px;flex-wrap:wrap;align-content:center}.photo-row img{height:auto;max-height:100%;max-width:48%}.photo-row.single img{max-width:96%}.g-top{padding:58px 12px 8px}.g-title{font-size:18px}.g-slogo{max-width:140px}.dk-slide{padding:76px 24px}}
 </style>
 </head>
 <body>
@@ -96,12 +89,21 @@ function tick(){loaded++;bar.style.width=(loaded/loadTotal*100)+'%';sub.textCont
 function probe(url,num){
   return new Promise(resolve=>{
     const img=new Image();
-    img.onload=()=>{tick();resolve({url,num,width:img.naturalWidth,height:img.naturalHeight,ok:true});};
-    img.onerror=()=>{tick();resolve({url,num,width:1,height:1,ok:false});};
+    img.onload=()=>{tick();resolve({url,num,width:img.naturalWidth,height:img.naturalHeight,aspect:img.naturalWidth/img.naturalHeight,ok:true});};
+    img.onerror=()=>{tick();resolve({url,num,width:1,height:1,aspect:1,ok:false});};
     img.src=url;
   });
 }
 function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out;}
+function balanceRows(items,rowCount){
+  const rows=Array.from({length:rowCount},()=>({items:[],aspect:0}));
+  items.forEach(item=>{
+    rows.sort((a,b)=>a.aspect-b.aspect);
+    rows[0].items.push(item);
+    rows[0].aspect+=item.aspect;
+  });
+  return rows.map(r=>r.items.sort((a,b)=>a.num-b.num)).filter(Boolean).filter(r=>r.length);
+}
 function hdr(light,idx){
   const d=document.createElement('div');d.className='s-hdr';
   const t=light?'lt':'dk';
@@ -138,14 +140,19 @@ function createGallery(groups){
       title.append(bell,rlogo,act);
       const sub=document.createElement('div');sub.className='g-sub';sub.textContent='친구들과 함께한 즐거운 순간들 ✨';
       top.append(title,sub);
-      const grid=document.createElement('div');grid.className=`g-grid ${group.kind} count-${items.length}`;
-      items.forEach(item=>{
-        const cell=document.createElement('div');cell.className='g-cell';
-        const img=document.createElement('img');img.src=item.url;img.alt='세움학교 활동 '+item.num;
-        img.onerror=()=>{cell.classList.add('missing');cell.textContent='이미지를 불러오지 못했습니다';};
-        cell.appendChild(img);grid.appendChild(cell);
+      const board=document.createElement('div');board.className='photo-board';
+      const rowCount=items.length<=3?1:2;
+      balanceRows(items,rowCount).forEach(rowItems=>{
+        const row=document.createElement('div');row.className='photo-row '+(rowItems.length===1?'single':'');
+        rowItems.forEach(item=>{
+          const img=document.createElement('img');img.src=item.url;img.alt='세움학교 활동 '+item.num;
+          img.style.aspectRatio=`${item.width} / ${item.height}`;
+          img.onerror=()=>{row.classList.add('missing');row.textContent='이미지를 불러오지 못했습니다';};
+          row.appendChild(img);
+        });
+        board.appendChild(row);
       });
-      w.append(top,grid);d.append(w,hdr(false,slideIndex));canvas.appendChild(d);slideIndex++;
+      w.append(top,board);d.append(w,hdr(false,slideIndex));canvas.appendChild(d);slideIndex++;
     });
   });
 }
@@ -171,8 +178,8 @@ async function build(){
   const portrait=measured.filter(p=>p.ok&&p.width<p.height).sort((a,b)=>a.num-b.num);
   const missing=measured.filter(p=>!p.ok).sort((a,b)=>a.num-b.num);
   const groups=[
-    {kind:'landscape',label:'가로 사진',chunks:chunk(landscape.concat(missing),4)},
-    {kind:'portrait',label:'세로 사진',chunks:chunk(portrait,3)}
+    {kind:'landscape',label:'가로 사진',chunks:chunk(landscape.concat(missing),5)},
+    {kind:'portrait',label:'세로 사진',chunks:chunk(portrait,6)}
   ].filter(g=>g.chunks.length);
   TOTAL=2+groups.reduce((sum,g)=>sum+g.chunks.length,0);
   createIntro();createGallery(groups);createOutro();
