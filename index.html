@@ -75,7 +75,8 @@ body{background:#000;font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans
 <div id="esc">PRESS ESC TO RESTORE MENU</div>
 <script>
 const RAW='https://raw.githubusercontent.com/iooi303648-bot/seum-festival2/main/';
-const asset=name=>RAW+name.split('/').map(encodeURIComponent).join('/');
+const VERSION='373c64c';
+const asset=name=>RAW+name.split('/').map(encodeURIComponent).join('/')+'?v='+VERSION;
 const SLOGO=asset('교포.png');
 const RLOGO=asset('세움학교 로고.png');
 const titleImg=asset('KakaoTalk_20260504_111859834.png');
